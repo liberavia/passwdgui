@@ -1,7 +1,7 @@
 #!/usr/bin/expect
 set timeout -1
 
-set status [catch {exec zenity --password "--text=Bitte geben Sie Ihr aktuelles Passwort ein"} oldpasswd]
+set status [catch {exec zenity --entry --hide-text "--text=Bitte geben Sie Ihr aktuelles Passwort ein" "--title=Aktuelles Passwort"} oldpasswd]
 if {$status != 0} exit
 spawn passwd
 expect "Current password:"
@@ -9,13 +9,13 @@ send -- "$oldpasswd\r"
 expect {
     "passwd: Passwort nicht geändert" {exit}
     "Geben Sie ein neues Passwort ein:" {
-        set status [catch {exec zenity --password "--text=Bitte geben Sie Ihr neues Passwort ein"} newpasswd1]
+        set status [catch {exec --entry --hide-text "--text=Bitte geben Sie Ihr neues Passwort ein" "--title=Neues Passwort"} newpasswd1]
         if {$status != 0} exit
         send -- "$newpasswd1\r"
     }
 }
 
-set status [catch {exec zenity --password "--text=Bitte geben Sie Ihr neues Passwort erneut ein"} newpasswd2]
+set status [catch {exec zenity --entry --hide-text "--text=Bitte geben Sie Ihr neues Passwort erneut ein" "--title=Wiederholen des neuen Passworts"} newpasswd2]
 if {$status != 0} exit
 expect "Geben Sie das neue Passwort erneut ein:"
 send -- "$newpasswd2\r"
