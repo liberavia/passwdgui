@@ -1,24 +1,46 @@
 #!/usr/bin/expect
 set timeout -1
 
-set status [catch {exec zenity --entry "--hide-text --text=Bitte geben Sie Ihr aktuelles Passwort ein --title=Aktuelles Passwort"} oldpasswd]
-if {$status != 0} exit
+set status [catch {exec zenity --entry --hide-text "--text=Bitte geben Sie Ihr aktuelles Passwort ein" "--title=Aktuelles Passwort"} oldpasswd]
 spawn passwd
 expect "Current password:"
 send -- "$oldpasswd\r"
 expect {
-    "passwd: Passwort nicht geändert" {exit}
+    "passwd: Passwort nicht geändert" {
+        exec zenity --info "--text=Ihr aktuelles Passwort wurde nicht korrekt eingegeben." "--title=Passwort wurde nicht geändert" --width=640 --height=400
+        exit
+    }
     "Geben Sie ein neues Passwort ein:" {
-        set status [catch {exec --entry "--hide-text --text=Bitte geben Sie Ihr neues Passwort ein --title=Neues Passwort"} newpasswd1]
-        if {$status != 0} exit
+        set status [catch {exec zenity --entry --hide-text "--text=Bitte geben Sie Ihr neues Passwort ein" "--title=Neues Passwort"} newpasswd1]
         send -- "$newpasswd1\r"
     }
 }
 
-set status [catch {exec zenity --entry "--hide-text --text=Bitte geben Sie Ihr neues Passwort erneut ein --title=Wiederholen des neuen Passworts"} newpasswd2]
-if {$status != 0} exit
-expect "Geben Sie das neue Passwort erneut ein:"
-send -- "$newpasswd2\r"
+expect {
+    "Geben Sie das neue Passwort erneut ein:" {
+        set status [catch {exec zenity --entry --hide-text "--text=Bitte geben Sie Ihr neues Passwort erneut ein" "--title=Aktuelles Passwort wiederholen"} newpasswd2]
+        send -- "$newpasswd2\r"
+    }
+}
+
+expect {
+    "Die Passwörter stimmen nicht überein.*" {
+        exec zenity --info "--text=Die eingegebenen neuen Passörter stimmen nicht überein." "--title=Passwort wurde nicht geändert" --width=640 --height=400 
+        exit
+    }
+    "passwd: Passwort nicht geändert" {
+        exec zenity --info "--text=Ihr neues Passwort wurde abgelehnt." "--title=Passwort wurde nicht geändert" --width=640 --height=400 
+        exit
+    }
+    "passwd: Passwort erfolgreich geändert" {
+        exec zenity --info "--text=Ihr neues Passwort wurde erfolgreich geändert." "--title=Passwort wurde geändert" --width=640 --height=400 
+        exit
+    }
+    "Geben Sie ein neues Passwort ein:" {
+        exec zenity --info  "--text=Ihr neues Passwort wurde abgelehnt. Achten Sie darauf, dass Ihr Passwort eine Länge von mindestens acht Zeichen aufweisen muss und aus Buchstaben, Zahlen und Sonderzeichen besteht" "--title=Passwort wurde nicht geändert" --width=640 --height=400
+        exit
+    }    
+}
 
 expect eof
 
